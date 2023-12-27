@@ -7,6 +7,7 @@ import com.example.jwtsecurityapp.config.JWTService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +17,8 @@ public class AuthenticationService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final JWTService jwtService;
-
     private final AuthenticationManager authenticationManager;
+
     public AuthenticationResponse register(RegisterRequest request) {
         var user = User.builder()
                 .firstName(request.getFirstName())
@@ -34,16 +35,25 @@ public class AuthenticationService {
 
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(/**Metoda are grija sa mi returneze inclusiv erori daca email ul sau parola nu sunt corecte*/
+        try{
+            authenticationManager.authenticate(/**Metoda are grija sa mi returneze inclusiv erori daca email ul sau parola nu sunt corecte*/
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
                         request.getPassword()
                 )
-        );
-        //totul a fost ok si general un token pe care sa l trimitem inapoi
-        var user = repository.findByEmail(request.getEmail()).orElseThrow();
-        var jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse.builder()
+            );
+
+            //totul a fost ok si general un token pe care sa l trimitem inapoi
+
+            var user = repository.findByEmail(request.getEmail()).orElseThrow();
+
+            var jwtToken = jwtService.generateToken(user);
+
+            return AuthenticationResponse.builder()
                 .token(jwtToken).build();
+        } catch (AuthenticationException e){
+            System.out.println("exception at authentication " + e);
+            return AuthenticationResponse.builder().build();
+        }
     }
 }
