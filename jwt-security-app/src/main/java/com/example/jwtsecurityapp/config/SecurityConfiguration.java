@@ -27,7 +27,7 @@ public class SecurityConfiguration {
         http
                 .csrf(csrf->csrf.disable())
                 .authorizeHttpRequests(authorize->authorize
-                        .requestMatchers("")
+                        .requestMatchers("/api/v1/auth/**")//toate metodele din requestul respectiv sunt in whitelist  asa ca le autorizam pe toate
                         .permitAll()
                         .anyRequest()
                         .authenticated())
